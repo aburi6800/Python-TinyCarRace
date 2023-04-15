@@ -302,7 +302,7 @@ def drawScreen():
 	# 文字描画
 	if gameStatus == GAMESTATUS_TITLE:
 		canvas.create_rectangle(0, 0, gPos(VRM_WIDTH), gPos(VRM_HEIGHT), fill = "Black")
-		writeText(8, 6, "TINY RACING GAME", "TEXT1")
+		writeText(9, 6, "TINY CAR RACE", "TEXT1")
 		writeText(2, 20, "PROGRAMMED BY ABURI6800 2020", "TEXT1")
 		if gameTime < 25:
 			writeText(9, 13, "PUSH SPACE KEY", "TEXT1")
@@ -402,7 +402,7 @@ def main():
 # Windowを生成
 root = tkinter.Tk()
 root.geometry(str(gPos(VRM_WIDTH) - 8) + "x" + str(gPos(VRM_HEIGHT) - 8))
-root.title("TintRacingGame")
+root.title("Tiny Car Race")
 root.bind("<KeyPress>", pressKey)
 root.bind("<KeyRelease>", releaseKey)
 
