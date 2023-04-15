@@ -21,7 +21,7 @@ $ python -m pip install --upgrade pip
 $ python -m pip install --upgrade Pillow
 ```
 
-> Pillowのインストールについては下記を参照ください。 
+> Pillowのインストールについては下記を参照ください。  
 > <https://pillow.readthedocs.io/en/latest/installation.html>
 
 ## ゲームの実行
