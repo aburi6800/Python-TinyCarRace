@@ -40,6 +40,9 @@ basePath = os.path.abspath(os.path.dirname(__file__))
 blankRow = [0] * VRM_WIDTH
 vrm = [blankRow] * VRM_HEIGHT
 
+# スクロール用のインデックスオフセット
+indexOffset = 0
+
 # 道幅
 roadWidth = 12
 
@@ -107,6 +110,8 @@ def title():
 		roadX = 10
 		# バックグラウンド情報を初期化
 		vrm = [blankRow] * VRM_HEIGHT
+		# インデックスオフセット初期化
+		indexOffset = 0
 		# ゲーム開始
 		gameStatus = GAMESTATUS_START
 		gameTime = 0
@@ -117,17 +122,10 @@ def title():
 ############################################################################### 
 def gameStart():
 	global gameStatus, gameTime
-
-	# 道を描画
-	newRow = [2] * VRM_WIDTH
-	for w in range(12):
-		newRow[10 + w] = 0
-	newRow[9] = 1
-	newRow[22] = 1
-	 
+	
+	# 道をだんだん表示する
 	if gameTime < 24:
-		vrm.pop(VRM_HEIGHT - 1)
-		vrm.insert(0, newRow)
+		generateRoad(False)
 
 	if gameTime == 50:
 		# ゲームメイン
@@ -158,7 +156,7 @@ def gameMain():
 # 道を生成
 ############################################################################### 
 def generateRoad(isMove=True):
-	global roadX
+	global roadX, indexOffset
 
 	if isMove == True:
 		# 道路を左右に動かす
@@ -166,19 +164,20 @@ def generateRoad(isMove=True):
 		if (roadX + v > 0 and roadX + v < VRM_WIDTH - roadWidth - 1):
 			roadX = roadX + v
 
-	# 新しい道を生成
+	# 新しい表示行を生成
 	newRow = [2] * VRM_WIDTH
 	for w in range(roadWidth):
 		newRow[roadX + w] = 0
 	newRow[roadX - 1] = 1
 	newRow[roadX + roadWidth] = 1
 
-	# 画面最下行を削除
-	vrm.pop(VRM_HEIGHT - 1)
+	# インデックスオフセット値を更新
+	indexOffset -= 1
+	if indexOffset < 0:
+		indexOffset = VRM_HEIGHT - 1
 
-	# 画面最上行に新しい道を追加
-	vrm.insert(0, newRow)
-
+	# 対象の仮想画面の行に生成した道を設定
+	vrm[indexOffset] = newRow
 
 ############################################################################### 
 # プレイヤー移動 & 衝突判定
@@ -187,12 +186,18 @@ def movePlayer():
 	global gameStatus, gameTime, mx
 
 	if key == KEY_LEFT and mx > 0:
-		mx = mx - 1
+		mx -= 1
 
 	if key == KEY_RIGHT and mx < VRM_WIDTH:
-		mx = mx + 1
+		mx += 1
 
-	if vrm[my][mx] > 0:
+	# インデックスオフセットから当たり判定対象の仮想画面Y座標を算出
+	ty = indexOffset + my
+	if ty > VRM_HEIGHT - 1:
+		ty = ty - VRM_HEIGHT
+
+	# 当たり判定
+	if vrm[ty][mx] > 0:
 		# ミス
 		gameStatus = GAMESTATUS_MISS
 		gameTime = 0
@@ -206,7 +211,7 @@ def moveEnemy():
 
 	# 敵の数の変動
 	if enemy_count < ENEMY_MAX and gameTime % 150 == 0:
-		enemy_count = enemy_count + 1
+		enemy_count += 1
 
 	# 敵の出現・移動・衝突判定
 	for e in range(enemy_count):
@@ -215,9 +220,9 @@ def moveEnemy():
 			# esは1が直進、2が途中からプレイヤーに寄せてくる
 			if es[e] == 2 and ey[e] < 15:
 				if ex[e] > mx:
-					ex[e] = ex[e] - 1
+					ex[e] -= 1
 				if ex[e] < mx:
-					ex[e] = ex[e] + 1
+					ex[e] += 1
 			ey[e] = ey[e] + 1
 			if ey[e] > 23:
 				es[e] = 0
@@ -276,8 +281,11 @@ def drawScreen():
 	if gameStatus == GAMESTATUS_START or gameStatus == GAMESTATUS_MAIN or gameStatus == GAMESTATUS_MISS:
 		# バックグラウンド描画
 		for row in range(VRM_HEIGHT):
+			vrow = row + indexOffset
+			if vrow > VRM_HEIGHT - 1:
+				vrow = vrow - VRM_HEIGHT
 			for col in range(VRM_WIDTH):
-				canvas.create_image(gPos(col), gPos(row), image = img_chr[vrm[row][col]], tag = "BG1")
+				canvas.create_image(gPos(col), gPos(row), image = img_chr[vrm[vrow][col]], tag = "BG1")
 
     # キャラクタ描画
 	if gameStatus == GAMESTATUS_MAIN:
@@ -358,7 +366,7 @@ def main():
 	global gameTime, roadWidth, roadX, mx, key, keyOff
 
 	# ゲームの経過時間を加算
-	gameTime = gameTime + 1
+	gameTime += 1
 
 	# タイトル
 	if gameStatus == GAMESTATUS_TITLE:
